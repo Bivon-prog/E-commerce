@@ -1,0 +1,20 @@
+{
+  "name": "ecommerce-project",
+  "version": "1.0.0",
+  "description": "Mobile phone e-commerce site with Rust backend",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run backend\" \"npm run client\"",
+    "backend": "cd rust-backend && cargo run",
+    "client": "cd client && npm run dev",
+    "install-all": "npm install && cd client && npm install && cd rust-backend && cargo build",
+    "build-backend": "cd rust-backend && cargo build --release",
+    "test-backend": "cd rust-backend && cargo test"
+  },
+  "keywords": ["rust", "actix-web", "mongodb", "react", "ecommerce"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
