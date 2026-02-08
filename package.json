@@ -1,17 +1,15 @@
 {
   "name": "ecommerce-project",
   "version": "1.0.0",
-  "description": "Mobile phone e-commerce site with Rust backend",
+  "description": "Mobile phone e-commerce site with Django backend",
   "main": "index.js",
   "scripts": {
     "start": "concurrently \"npm run backend\" \"npm run client\"",
-    "backend": "cd rust-backend && cargo run",
+    "backend": "cd django-backend && python manage.py runserver 8080",
     "client": "cd client && npm run dev",
-    "install-all": "npm install && cd client && npm install && cd rust-backend && cargo build",
-    "build-backend": "cd rust-backend && cargo build --release",
-    "test-backend": "cd rust-backend && cargo test"
+    "install-all": "npm install && cd client && npm install && cd django-backend && pip install -r requirements.txt"
   },
-  "keywords": ["rust", "actix-web", "mongodb", "react", "ecommerce"],
+  "keywords": ["django", "python", "mongodb", "react", "ecommerce"],
   "author": "",
   "license": "ISC",
   "devDependencies": {
