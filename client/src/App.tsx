@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import ProductDetails from './pages/ProductDetails';
 import Checkout from './pages/Checkout';
 import { CartProvider } from './context/CartContext';
+import './styles/phoneplace.css';
 
 function App() {
   return (
@@ -11,7 +12,7 @@ function App() {
       <Router>
         <div className="d-flex flex-column min-vh-100">
           <Navbar />
-          <div className="container mt-4 flex-grow-1">
+          <div className="container-fluid mt-4 flex-grow-1">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/product/:id" element={<ProductDetails />} />
@@ -19,7 +20,7 @@ function App() {
             </Routes>
           </div>
           <footer className="bg-dark text-white text-center py-3 mt-4">
-            <p className="mb-0">© 2026 TechShop. All rights reserved.</p>
+            <p className="mb-0">© 2026 Phone Place Kenya. All rights reserved.</p>
           </footer>
         </div>
       </Router>

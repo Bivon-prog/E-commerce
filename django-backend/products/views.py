@@ -4,9 +4,30 @@ API views for product management.
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Product, MongoDB
 from .serializers import ProductSerializer, CreateProductSerializer
 import logging
+import os
+
+# Choose the right model based on configuration
+if os.getenv('USE_MOCK_DB', 'false').lower() == 'true':
+    from .mock_models import MockProduct as Product
+    DB_TYPE = "mock"
+elif os.getenv('ASTRA_TOKEN') and os.getenv('ASTRA_API_ENDPOINT'):
+    try:
+        from .astra_models import AstraProduct as Product
+        DB_TYPE = "astra"
+    except ImportError:
+        from .mock_models import MockProduct as Product
+        DB_TYPE = "mock (astra unavailable)"
+else:
+    try:
+        from .models import Product
+        DB_TYPE = "cassandra"
+    except Exception:
+        from .mock_models import MockProduct as Product
+        DB_TYPE = "mock (fallback)"
+
+logger = logging.getLogger(__name__)
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +52,63 @@ def product_list(request):
         
         try:
             products = Product.get_all(filters)
-            serializer = ProductSerializer(products, many=True)
-            logger.info(f"Retrieved {len(products)} products")
+            
+            # Apply additional filtering based on specs (comprehensive categories)
+            filtered_products = products
+            
+            # Filter by price tier
+            if request.GET.get('price_tier'):
+                price_tier = request.GET.get('price_tier')
+                filtered_products = [p for p in filtered_products 
+                                   if p.get('specs', {}).get('price_tier') == price_tier]
+            
+            # Filter by use case
+            if request.GET.get('use_case'):
+                use_case = request.GET.get('use_case')
+                filtered_products = [p for p in filtered_products 
+                                   if p.get('specs', {}).get('use_case') == use_case]
+            
+            # Filter by form factor
+            if request.GET.get('form_factor'):
+                form_factor = request.GET.get('form_factor')
+                filtered_products = [p for p in filtered_products 
+                                   if p.get('specs', {}).get('form_factor') == form_factor]
+            
+            # Filter by software experience
+            if request.GET.get('software_experience'):
+                software_experience = request.GET.get('software_experience')
+                filtered_products = [p for p in filtered_products 
+                                   if p.get('specs', {}).get('software_experience') == software_experience]
+            
+            # Filter by chipset category
+            if request.GET.get('chipset_category'):
+                chipset_category = request.GET.get('chipset_category')
+                filtered_products = [p for p in filtered_products 
+                                   if p.get('specs', {}).get('chipset_category') == chipset_category]
+            
+            # Filter by market origin
+            if request.GET.get('market_origin'):
+                market_origin = request.GET.get('market_origin')
+                filtered_products = [p for p in filtered_products 
+                                   if p.get('specs', {}).get('market_origin') == market_origin]
+            
+            # Filter by target demographic
+            if request.GET.get('target_demographic'):
+                target_demographic = request.GET.get('target_demographic')
+                filtered_products = [p for p in filtered_products 
+                                   if p.get('specs', {}).get('target_demographic') == target_demographic]
+            
+            # Filter by price range
+            if request.GET.get('min_price'):
+                min_price = int(request.GET.get('min_price'))
+                filtered_products = [p for p in filtered_products if p.get('price', 0) >= min_price]
+            
+            if request.GET.get('max_price'):
+                max_price = int(request.GET.get('max_price'))
+                filtered_products = [p for p in filtered_products if p.get('price', 0) <= max_price]
+            
+            serializer = ProductSerializer(filtered_products, many=True)
+            logger.info(f"Retrieved {len(filtered_products)} products after filtering")
             return Response(serializer.data)
         except Exception as e:
             logger.error(f"Error fetching products: {str(e)}")
@@ -154,21 +230,121 @@ def product_detail(request, product_id):
 
 
 @api_view(['GET'])
+def filter_options(request):
+    """Get all available filter options for the comprehensive categorization system"""
+    try:
+        products = Product.get_all()
+        
+        filter_options = {
+            'brands': set(),
+            'price_tiers': set(),
+            'use_cases': set(),
+            'form_factors': set(),
+            'software_experiences': set(),
+            'chipset_categories': set(),
+            'market_origins': set(),
+            'target_demographics': set(),
+            'price_range': {'min': float('inf'), 'max': 0}
+        }
+        
+        for product in products:
+            # Basic filters
+            filter_options['brands'].add(product.get('brand'))
+            
+            # Price range
+            price = product.get('price', 0)
+            if price > 0:
+                filter_options['price_range']['min'] = min(filter_options['price_range']['min'], price)
+                filter_options['price_range']['max'] = max(filter_options['price_range']['max'], price)
+            
+            # Comprehensive category filters from specs
+            specs = product.get('specs', {})
+            if specs.get('price_tier'):
+                filter_options['price_tiers'].add(specs['price_tier'])
+            if specs.get('use_case'):
+                filter_options['use_cases'].add(specs['use_case'])
+            if specs.get('form_factor'):
+                filter_options['form_factors'].add(specs['form_factor'])
+            if specs.get('software_experience'):
+                filter_options['software_experiences'].add(specs['software_experience'])
+            if specs.get('chipset_category'):
+                filter_options['chipset_categories'].add(specs['chipset_category'])
+            if specs.get('market_origin'):
+                filter_options['market_origins'].add(specs['market_origin'])
+            if specs.get('target_demographic'):
+                filter_options['target_demographics'].add(specs['target_demographic'])
+        
+        # Convert sets to sorted lists
+        response_data = {
+            'brands': sorted(list(filter_options['brands'])),
+            'price_tiers': sorted(list(filter_options['price_tiers'])),
+            'use_cases': sorted(list(filter_options['use_cases'])),
+            'form_factors': sorted(list(filter_options['form_factors'])),
+            'software_experiences': sorted(list(filter_options['software_experiences'])),
+            'chipset_categories': sorted(list(filter_options['chipset_categories'])),
+            'market_origins': sorted(list(filter_options['market_origins'])),
+            'target_demographics': sorted(list(filter_options['target_demographics'])),
+            'price_range': {
+                'min': int(filter_options['price_range']['min']) if filter_options['price_range']['min'] != float('inf') else 0,
+                'max': int(filter_options['price_range']['max'])
+            }
+        }
+        
+        return Response(response_data)
+    
+    except Exception as e:
+        logger.error(f"Error getting filter options: {str(e)}")
+        return Response(
+            {'error': 'Failed to get filter options', 'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
 def health_check(request):
     """Health check endpoint"""
     try:
-        # Test MongoDB connection
-        db = MongoDB.get_database()
-        db.command('ping')
-        
+        # Check database type and connection
+        if DB_TYPE == "mock":
+            return Response({
+                'status': 'healthy',
+                'database': 'mock (in-memory)',
+                'message': 'Django backend is running with mock database'
+            })
+        elif DB_TYPE == "astra":
+            # Test Astra connection
+            from .astra_models import AstraDB
+            database = AstraDB.get_database()
+            collections = database.list_collection_names()
+            
+            return Response({
+                'status': 'healthy',
+                'database': 'astra (connected)',
+                'message': 'Django backend is running with Astra database',
+                'collections': collections
+            })
+        elif DB_TYPE == "cassandra":
+            # Test Cassandra connection
+            from .models import CassandraDB
+            session = CassandraDB.get_session()
+            session.execute("SELECT now() FROM system.local")
+            
+            return Response({
+                'status': 'healthy',
+                'database': 'cassandra (connected)',
+                'message': 'Django backend is running with Cassandra'
+            })
+        else:
+            return Response({
+                'status': 'healthy',
+                'database': f'{DB_TYPE}',
+                'message': f'Django backend is running with {DB_TYPE} database'
+            })
+    except Exception as e:
+        # Fallback response
         return Response({
             'status': 'healthy',
-            'database': 'connected',
-            'message': 'Django backend is running'
+            'database': f'{DB_TYPE} (error)',
+            'message': f'Django backend is running but database has issues: {str(e)}',
+            'warning': 'Some features may not work properly'
         })
-    except Exception as e:
-        return Response({
-            'status': 'unhealthy',
-            'database': 'disconnected',
-            'error': str(e)
-        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)

@@ -64,7 +64,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ecommerce.wsgi.application'
 
-# Database - Using MongoDB (no Django ORM)
+# Database - Using Cassandra (no Django ORM)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -72,9 +72,24 @@ DATABASES = {
     }
 }
 
-# MongoDB Configuration
-MONGODB_URI = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')
-DATABASE_NAME = os.getenv('DATABASE_NAME', 'ecommerce_db')
+# Cassandra Configuration (Local or Astra)
+# For local Cassandra
+CASSANDRA_HOSTS = os.getenv('CASSANDRA_HOSTS', '127.0.0.1').split(',')
+CASSANDRA_PORT = int(os.getenv('CASSANDRA_PORT', '9042'))
+CASSANDRA_KEYSPACE = os.getenv('CASSANDRA_KEYSPACE', 'ecommerce')
+
+# For DataStax Astra (Cloud Cassandra)
+ASTRA_DB_ID = os.getenv('ASTRA_DB_ID', '')
+ASTRA_DB_REGION = os.getenv('ASTRA_DB_REGION', '')
+ASTRA_DB_KEYSPACE = os.getenv('ASTRA_DB_KEYSPACE', 'ecommerce')
+ASTRA_CLIENT_ID = os.getenv('ASTRA_CLIENT_ID', '')
+ASTRA_CLIENT_SECRET = os.getenv('ASTRA_CLIENT_SECRET', '')
+ASTRA_TOKEN = os.getenv('ASTRA_TOKEN', '')
+ASTRA_SECURE_BUNDLE_PATH = os.getenv('ASTRA_SECURE_BUNDLE_PATH', '')
+ASTRA_API_ENDPOINT = os.getenv('ASTRA_API_ENDPOINT', '')
+
+# Mock database setting
+USE_MOCK_DB = os.getenv('USE_MOCK_DB', 'false').lower() == 'true'
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

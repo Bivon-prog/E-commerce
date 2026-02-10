@@ -23,10 +23,11 @@ npm start
 
 ## 🔧 Technology Stack
 
-### Backend (Django)
+### Backend (Django + Cassandra)
 - **Django 4.2.7** - Python web framework
 - **Django REST Framework 3.14** - RESTful API toolkit
-- **MongoDB** - Document database with pymongo
+- **Apache Cassandra** - Distributed NoSQL database
+- **scylla-driver** - Cassandra Python driver
 - **django-cors-headers** - CORS support for React frontend
 - **Requests** - HTTP client for image URL validation
 
