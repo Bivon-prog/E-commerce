@@ -4,12 +4,17 @@ import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
 import FilterSidebar from '../components/FilterSidebar';
 
-const Home: React.FC = () => {
+interface HomeProps {
+  searchHandlerRef?: React.MutableRefObject<((query: string) => void) | null>;
+}
+
+const Home: React.FC<HomeProps> = ({ searchHandlerRef }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilters, setActiveFilters] = useState<any>({});
   const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch products with filters
   const fetchProducts = async (filters: any = {}) => {
@@ -26,7 +31,25 @@ const Home: React.FC = () => {
 
       const response = await api.get(`/products?${params.toString()}`);
       setProducts(response.data);
-      setFilteredProducts(response.data);
+      
+      // Apply search filter if search query exists
+      if (searchQuery.trim()) {
+        const filtered = response.data.filter((product: Product) => {
+          const query = searchQuery.toLowerCase();
+          return (
+            product.name.toLowerCase().includes(query) ||
+            product.brand.toLowerCase().includes(query) ||
+            product.description?.toLowerCase().includes(query) ||
+            product.specs?.processor?.toLowerCase().includes(query) ||
+            product.specs?.ram?.toLowerCase().includes(query) ||
+            product.specs?.storage?.toLowerCase().includes(query)
+          );
+        });
+        setFilteredProducts(filtered);
+      } else {
+        setFilteredProducts(response.data);
+      }
+      
       setLoading(false);
     } catch (err) {
       console.error('Failed to fetch products:', err);
@@ -34,10 +57,44 @@ const Home: React.FC = () => {
     }
   };
 
+  // Handle search from navbar
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    
+    if (query.trim()) {
+      const filtered = products.filter((product: Product) => {
+        const searchTerm = query.toLowerCase();
+        return (
+          product.name.toLowerCase().includes(searchTerm) ||
+          product.brand.toLowerCase().includes(searchTerm) ||
+          product.description?.toLowerCase().includes(searchTerm) ||
+          product.specs?.processor?.toLowerCase().includes(searchTerm) ||
+          product.specs?.ram?.toLowerCase().includes(searchTerm) ||
+          product.specs?.storage?.toLowerCase().includes(searchTerm)
+        );
+      });
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts(products);
+    }
+  };
+
   // Initial load
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  // Register search handler
+  useEffect(() => {
+    if (searchHandlerRef) {
+      searchHandlerRef.current = handleSearch;
+    }
+    return () => {
+      if (searchHandlerRef) {
+        searchHandlerRef.current = null;
+      }
+    };
+  }, [searchHandlerRef, products]);
 
   // Handle filter changes
   const handleFilterChange = (newFilters: any) => {
@@ -145,13 +202,23 @@ const Home: React.FC = () => {
           </div>
 
           {/* Active Filters Display */}
-          {Object.keys(activeFilters).length > 0 && (
+          {(Object.keys(activeFilters).length > 0 || searchQuery.trim()) && (
             <div className="mb-4">
               <div className="d-flex flex-wrap gap-2 align-items-center">
                 <span className="text-muted small fw-medium">Active filters:</span>
+                {searchQuery.trim() && (
+                  <span className="badge bg-info fs-6">
+                    Search: {searchQuery}
+                    <button 
+                      className="btn-close btn-close-white ms-2" 
+                      style={{ fontSize: '0.6rem' }}
+                      onClick={() => handleSearch('')}
+                    ></button>
+                  </span>
+                )}
                 {Object.entries(activeFilters).map(([key, value]) => (
                   <span key={key} className="badge bg-primary fs-6">
-                    {key.replace('_', ' ')}: {value}
+                    {key.replace('_', ' ')}: {String(value)}
                     <button 
                       className="btn-close btn-close-white ms-2" 
                       style={{ fontSize: '0.6rem' }}
@@ -165,7 +232,10 @@ const Home: React.FC = () => {
                 ))}
                 <button 
                   className="btn btn-sm btn-outline-secondary"
-                  onClick={() => handleFilterChange({})}
+                  onClick={() => {
+                    handleFilterChange({});
+                    handleSearch('');
+                  }}
                 >
                   Clear All
                 </button>
@@ -177,12 +247,13 @@ const Home: React.FC = () => {
           <div className="mb-4">
             <p className="text-muted mb-0">
               Showing <strong>{filteredProducts.length}</strong> product{filteredProducts.length !== 1 ? 's' : ''}
-              {Object.keys(activeFilters).length > 0 && ' matching your filters'}
+              {searchQuery.trim() && ` matching "${searchQuery}"`}
+              {Object.keys(activeFilters).length > 0 && !searchQuery.trim() && ' matching your filters'}
             </p>
           </div>
 
           {/* Category Sections (Phone Place Kenya Style) */}
-          {Object.keys(activeFilters).length === 0 ? (
+          {Object.keys(activeFilters).length === 0 && !searchQuery.trim() ? (
             // Show category sections when no filters are active
             <div>
               {categorySections.map((section, index) => (
@@ -207,7 +278,7 @@ const Home: React.FC = () => {
               ))}
             </div>
           ) : (
-            // Show filtered results
+            // Show filtered/search results
             <div>
               <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-3 product-grid">
                 {filteredProducts.map(product => (
@@ -223,10 +294,17 @@ const Home: React.FC = () => {
                     <i className="bi bi-search" style={{ fontSize: '3rem', color: '#6c757d' }}></i>
                   </div>
                   <h5>No products found</h5>
-                  <p className="text-muted">Try adjusting your filters or search criteria</p>
+                  <p className="text-muted">
+                    {searchQuery.trim() 
+                      ? `No results for "${searchQuery}". Try different keywords.`
+                      : 'Try adjusting your filters or search criteria'}
+                  </p>
                   <button 
                     className="btn btn-primary"
-                    onClick={() => handleFilterChange({})}
+                    onClick={() => {
+                      handleFilterChange({});
+                      handleSearch('');
+                    }}
                   >
                     Clear All Filters
                   </button>
