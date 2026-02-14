@@ -71,16 +71,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   return (
     <div className="card h-100 shadow-sm border-0 product-card">
-      <div className="position-relative">
+      <div className="position-relative overflow-hidden">
         <img 
           src={getImageUrl()} 
           className="card-img-top" 
-          alt={product.name} 
-          style={{ 
-            objectFit: 'cover', 
-            height: '250px',
-            width: '100%'
-          }} 
+          alt={product.name}
         />
         
         {/* Offer Badge */}

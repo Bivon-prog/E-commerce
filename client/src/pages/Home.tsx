@@ -3,6 +3,7 @@ import api from '../services/api';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
 import FilterSidebar from '../components/FilterSidebar';
+import HeroBanner from '../components/HeroBanner';
 
 interface HomeProps {
   searchHandlerRef?: React.MutableRefObject<((query: string) => void) | null>;
@@ -154,21 +155,27 @@ const Home: React.FC<HomeProps> = ({ searchHandlerRef }) => {
         ></div>
       )}
 
+      {/* Hero Banner - Only show when no filters/search active */}
+      {Object.keys(activeFilters).length === 0 && !searchQuery.trim() && (
+        <div className="mb-4">
+          <HeroBanner products={products} />
+        </div>
+      )}
+
       <div className="row">
         {/* Filter Sidebar */}
-        <div className={`col-lg-3 ${showFilters ? 'd-block filter-sidebar' : 'd-none d-lg-block'}`}>
-          <div className="position-relative">
-            {/* Mobile Close Button */}
+        <div className={`col-lg-3 ${showFilters ? 'd-block' : 'd-none d-lg-block'}`}>
+          {showFilters && (
             <button 
               className="btn btn-close position-absolute top-0 end-0 d-lg-none"
               onClick={() => setShowFilters(false)}
               style={{ zIndex: 1051 }}
             ></button>
-            <FilterSidebar 
-              onFilterChange={handleFilterChange}
-              activeFilters={activeFilters}
-            />
-          </div>
+          )}
+          <FilterSidebar 
+            onFilterChange={handleFilterChange}
+            activeFilters={activeFilters}
+          />
         </div>
 
         {/* Main Content */}

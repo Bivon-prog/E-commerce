@@ -10,7 +10,7 @@ interface FilterSidebarProps {
 const FilterSidebar: React.FC<FilterSidebarProps> = ({ onFilterChange, activeFilters }) => {
   const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['brands', 'price_tiers']));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['brand', 'price_tier']));
 
   useEffect(() => {
     api.get('/filter-options')
@@ -71,12 +71,10 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ onFilterChange, activeFil
 
   if (loading) {
     return (
-      <div className="card">
-        <div className="card-body">
-          <div className="text-center">
-            <div className="spinner-border spinner-border-sm" role="status"></div>
-            <p className="mt-2 mb-0">Loading filters...</p>
-          </div>
+      <div className="filter-sidebar">
+        <div className="text-center">
+          <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+          <p className="mt-2 mb-0 text-muted">Loading filters...</p>
         </div>
       </div>
     );
@@ -84,61 +82,19 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ onFilterChange, activeFil
 
   if (!filterOptions) {
     return (
-      <div className="card">
-        <div className="card-body">
-          <p className="text-muted">Failed to load filters</p>
-        </div>
+      <div className="filter-sidebar">
+        <p className="text-muted">Failed to load filters</p>
       </div>
     );
   }
 
-  const FilterSection: React.FC<{ title: string; items: string[]; filterKey: string; icon: string }> = 
-    ({ title, items, filterKey, icon }) => {
-      const isExpanded = expandedSections.has(filterKey);
-      
-      return (
-        <div className="mb-3">
-          <button
-            className="btn btn-link p-0 text-start w-100 text-decoration-none d-flex justify-content-between align-items-center"
-            onClick={() => toggleSection(filterKey)}
-          >
-            <span className="fw-semibold">
-              {icon} {title}
-              {activeFilters[filterKey] && <span className="badge bg-primary ms-2">1</span>}
-            </span>
-            <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'}`}></i>
-          </button>
-          
-          {isExpanded && (
-            <div className="mt-2">
-              {items.map(item => (
-                <div key={item} className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name={filterKey}
-                    id={`${filterKey}-${item}`}
-                    checked={activeFilters[filterKey] === item}
-                    onChange={() => handleFilterChange(filterKey, item)}
-                  />
-                  <label className="form-check-label small" htmlFor={`${filterKey}-${item}`}>
-                    {item}
-                  </label>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      );
-    };
-
   return (
-    <div className="card sticky-top" style={{ top: '20px' }}>
-      <div className="card-header d-flex justify-content-between align-items-center">
-        <h6 className="mb-0">🔍 Filters</h6>
+    <div className="filter-sidebar">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h5 className="mb-0">Filters</h5>
         {getActiveFilterCount() > 0 && (
           <button 
-            className="btn btn-sm btn-outline-secondary"
+            className="btn btn-sm btn-outline-primary"
             onClick={clearAllFilters}
           >
             Clear All ({getActiveFilterCount()})
@@ -146,119 +102,289 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ onFilterChange, activeFil
         )}
       </div>
       
-      <div className="card-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-        {/* Brands */}
-        <FilterSection
-          title="Brands"
-          items={filterOptions.brands}
-          filterKey="brand"
-          icon="🏷️"
-        />
-
-        {/* Price Tiers */}
-        <FilterSection
-          title="Price Tiers"
-          items={filterOptions.price_tiers}
-          filterKey="price_tier"
-          icon="💰"
-        />
-
-        {/* Use Cases */}
-        <FilterSection
-          title="Use Cases"
-          items={filterOptions.use_cases}
-          filterKey="use_case"
-          icon="🎯"
-        />
-
-        {/* Software Experience */}
-        <FilterSection
-          title="Software"
-          items={filterOptions.software_experiences}
-          filterKey="software_experience"
-          icon="💻"
-        />
-
-        {/* Chipset Categories */}
-        <FilterSection
-          title="Processors"
-          items={filterOptions.chipset_categories}
-          filterKey="chipset_category"
-          icon="🔧"
-        />
-
-        {/* Market Origins */}
-        <FilterSection
-          title="Market Origin"
-          items={filterOptions.market_origins}
-          filterKey="market_origin"
-          icon="🌍"
-        />
-
-        {/* Target Demographics */}
-        <FilterSection
-          title="Target Users"
-          items={filterOptions.target_demographics}
-          filterKey="target_demographic"
-          icon="👥"
-        />
-
-        {/* Price Range */}
-        <div className="mb-3">
-          <button
-            className="btn btn-link p-0 text-start w-100 text-decoration-none d-flex justify-content-between align-items-center"
-            onClick={() => toggleSection('price_range')}
-          >
-            <span className="fw-semibold">
-              💵 Price Range
-              {(activeFilters.min_price || activeFilters.max_price) && 
-                <span className="badge bg-primary ms-2">1</span>
-              }
-            </span>
-            <i className={`bi bi-chevron-${expandedSections.has('price_range') ? 'up' : 'down'}`}></i>
-          </button>
-          
-          {expandedSections.has('price_range') && (
-            <div className="mt-2">
-              <div className="row g-2">
-                <div className="col-6">
-                  <label className="form-label small">Min Price</label>
-                  <input
-                    type="number"
-                    className="form-control form-control-sm"
-                    placeholder={`${Math.floor(filterOptions.price_range.min / 100).toLocaleString()}`}
-                    value={activeFilters.min_price ? Math.floor(activeFilters.min_price / 100) : ''}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value) * 100;
-                      if (!isNaN(value)) {
-                        handlePriceRangeChange(value, activeFilters.max_price || filterOptions.price_range.max);
-                      }
-                    }}
-                  />
-                </div>
-                <div className="col-6">
-                  <label className="form-label small">Max Price</label>
-                  <input
-                    type="number"
-                    className="form-control form-control-sm"
-                    placeholder={`${Math.floor(filterOptions.price_range.max / 100).toLocaleString()}`}
-                    value={activeFilters.max_price ? Math.floor(activeFilters.max_price / 100) : ''}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value) * 100;
-                      if (!isNaN(value)) {
-                        handlePriceRangeChange(activeFilters.min_price || filterOptions.price_range.min, value);
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-              <small className="text-muted">
-                Range: KES {Math.floor(filterOptions.price_range.min / 100).toLocaleString()} - 
-                KES {Math.floor(filterOptions.price_range.max / 100).toLocaleString()}
-              </small>
-            </div>
-          )}
+      {/* Brands */}
+      <div className="filter-section">
+        <div 
+          className="filter-section-header"
+          onClick={() => toggleSection('brand')}
+          style={{ cursor: 'pointer' }}
+        >
+          <h6 className="mb-0 d-flex justify-content-between align-items-center">
+            <span>Brands</span>
+            <i className={`bi bi-chevron-${expandedSections.has('brand') ? 'up' : 'down'}`}></i>
+          </h6>
         </div>
+        {expandedSections.has('brand') && (
+          <div className="filter-section-content">
+            {filterOptions.brands.map(item => (
+              <div key={item} className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="brand"
+                  id={`brand-${item}`}
+                  checked={activeFilters.brand === item}
+                  onChange={() => handleFilterChange('brand', item)}
+                />
+                <label className="form-check-label" htmlFor={`brand-${item}`}>
+                  {item}
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Price Tiers */}
+      <div className="filter-section">
+        <div 
+          className="filter-section-header"
+          onClick={() => toggleSection('price_tier')}
+          style={{ cursor: 'pointer' }}
+        >
+          <h6 className="mb-0 d-flex justify-content-between align-items-center">
+            <span>Price Tiers</span>
+            <i className={`bi bi-chevron-${expandedSections.has('price_tier') ? 'up' : 'down'}`}></i>
+          </h6>
+        </div>
+        {expandedSections.has('price_tier') && (
+          <div className="filter-section-content">
+            {filterOptions.price_tiers.map(item => (
+              <div key={item} className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="price_tier"
+                  id={`price_tier-${item}`}
+                  checked={activeFilters.price_tier === item}
+                  onChange={() => handleFilterChange('price_tier', item)}
+                />
+                <label className="form-check-label" htmlFor={`price_tier-${item}`}>
+                  {item}
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Use Cases */}
+      <div className="filter-section">
+        <div 
+          className="filter-section-header"
+          onClick={() => toggleSection('use_case')}
+          style={{ cursor: 'pointer' }}
+        >
+          <h6 className="mb-0 d-flex justify-content-between align-items-center">
+            <span>Use Cases</span>
+            <i className={`bi bi-chevron-${expandedSections.has('use_case') ? 'up' : 'down'}`}></i>
+          </h6>
+        </div>
+        {expandedSections.has('use_case') && (
+          <div className="filter-section-content">
+            {filterOptions.use_cases.map(item => (
+              <div key={item} className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="use_case"
+                  id={`use_case-${item}`}
+                  checked={activeFilters.use_case === item}
+                  onChange={() => handleFilterChange('use_case', item)}
+                />
+                <label className="form-check-label" htmlFor={`use_case-${item}`}>
+                  {item}
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Software Experience */}
+      <div className="filter-section">
+        <div 
+          className="filter-section-header"
+          onClick={() => toggleSection('software_experience')}
+          style={{ cursor: 'pointer' }}
+        >
+          <h6 className="mb-0 d-flex justify-content-between align-items-center">
+            <span>Software</span>
+            <i className={`bi bi-chevron-${expandedSections.has('software_experience') ? 'up' : 'down'}`}></i>
+          </h6>
+        </div>
+        {expandedSections.has('software_experience') && (
+          <div className="filter-section-content">
+            {filterOptions.software_experiences.map(item => (
+              <div key={item} className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="software_experience"
+                  id={`software_experience-${item}`}
+                  checked={activeFilters.software_experience === item}
+                  onChange={() => handleFilterChange('software_experience', item)}
+                />
+                <label className="form-check-label" htmlFor={`software_experience-${item}`}>
+                  {item}
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Chipset Categories */}
+      <div className="filter-section">
+        <div 
+          className="filter-section-header"
+          onClick={() => toggleSection('chipset_category')}
+          style={{ cursor: 'pointer' }}
+        >
+          <h6 className="mb-0 d-flex justify-content-between align-items-center">
+            <span>Processors</span>
+            <i className={`bi bi-chevron-${expandedSections.has('chipset_category') ? 'up' : 'down'}`}></i>
+          </h6>
+        </div>
+        {expandedSections.has('chipset_category') && (
+          <div className="filter-section-content">
+            {filterOptions.chipset_categories.map(item => (
+              <div key={item} className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="chipset_category"
+                  id={`chipset_category-${item}`}
+                  checked={activeFilters.chipset_category === item}
+                  onChange={() => handleFilterChange('chipset_category', item)}
+                />
+                <label className="form-check-label" htmlFor={`chipset_category-${item}`}>
+                  {item}
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Market Origins */}
+      <div className="filter-section">
+        <div 
+          className="filter-section-header"
+          onClick={() => toggleSection('market_origin')}
+          style={{ cursor: 'pointer' }}
+        >
+          <h6 className="mb-0 d-flex justify-content-between align-items-center">
+            <span>Market Origin</span>
+            <i className={`bi bi-chevron-${expandedSections.has('market_origin') ? 'up' : 'down'}`}></i>
+          </h6>
+        </div>
+        {expandedSections.has('market_origin') && (
+          <div className="filter-section-content">
+            {filterOptions.market_origins.map(item => (
+              <div key={item} className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="market_origin"
+                  id={`market_origin-${item}`}
+                  checked={activeFilters.market_origin === item}
+                  onChange={() => handleFilterChange('market_origin', item)}
+                />
+                <label className="form-check-label" htmlFor={`market_origin-${item}`}>
+                  {item}
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Target Demographics */}
+      <div className="filter-section">
+        <div 
+          className="filter-section-header"
+          onClick={() => toggleSection('target_demographic')}
+          style={{ cursor: 'pointer' }}
+        >
+          <h6 className="mb-0 d-flex justify-content-between align-items-center">
+            <span>Target Users</span>
+            <i className={`bi bi-chevron-${expandedSections.has('target_demographic') ? 'up' : 'down'}`}></i>
+          </h6>
+        </div>
+        {expandedSections.has('target_demographic') && (
+          <div className="filter-section-content">
+            {filterOptions.target_demographics.map(item => (
+              <div key={item} className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="target_demographic"
+                  id={`target_demographic-${item}`}
+                  checked={activeFilters.target_demographic === item}
+                  onChange={() => handleFilterChange('target_demographic', item)}
+                />
+                <label className="form-check-label" htmlFor={`target_demographic-${item}`}>
+                  {item}
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Price Range */}
+      <div className="filter-section">
+        <div 
+          className="filter-section-header"
+          onClick={() => toggleSection('price_range')}
+          style={{ cursor: 'pointer' }}
+        >
+          <h6 className="mb-0 d-flex justify-content-between align-items-center">
+            <span>Price Range</span>
+            <i className={`bi bi-chevron-${expandedSections.has('price_range') ? 'up' : 'down'}`}></i>
+          </h6>
+        </div>
+        {expandedSections.has('price_range') && (
+          <div className="filter-section-content">
+            <div className="row g-2 mb-2">
+              <div className="col-6">
+                <label className="form-label small">Min (KES)</label>
+                <input
+                  type="number"
+                  className="form-control form-control-sm"
+                  placeholder={`${Math.floor(filterOptions.price_range.min / 100).toLocaleString()}`}
+                  value={activeFilters.min_price ? Math.floor(activeFilters.min_price / 100) : ''}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) * 100;
+                    if (!isNaN(value)) {
+                      handlePriceRangeChange(value, activeFilters.max_price || filterOptions.price_range.max);
+                    }
+                  }}
+                />
+              </div>
+              <div className="col-6">
+                <label className="form-label small">Max (KES)</label>
+                <input
+                  type="number"
+                  className="form-control form-control-sm"
+                  placeholder={`${Math.floor(filterOptions.price_range.max / 100).toLocaleString()}`}
+                  value={activeFilters.max_price ? Math.floor(activeFilters.max_price / 100) : ''}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) * 100;
+                    if (!isNaN(value)) {
+                      handlePriceRangeChange(activeFilters.min_price || filterOptions.price_range.min, value);
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            <small className="text-muted d-block">
+              Range: KES {Math.floor(filterOptions.price_range.min / 100).toLocaleString()} - 
+              KES {Math.floor(filterOptions.price_range.max / 100).toLocaleString()}
+            </small>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -47,10 +47,10 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch }) => {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
       <div className="container">
         <Link className="navbar-brand d-flex align-items-center gap-2 fw-bold" to="/">
-          <FaMobileAlt /> TechShop
+          <FaMobileAlt /> Phone Place Kenya
         </Link>
         
         {/* Search Bar */}
@@ -71,8 +71,8 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch }) => {
 
         <div className="ms-auto d-flex align-items-center gap-2">
           {/* Cart Button */}
-          <Link to="/checkout" className="btn btn-light position-relative">
-            <FaShoppingCart className="text-primary" />
+          <Link to="/checkout" className="btn btn-primary position-relative">
+            <FaShoppingCart />
             {itemCount > 0 && (
               <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                 {itemCount}
@@ -84,7 +84,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch }) => {
           {isAuthenticated ? (
             <div className="dropdown">
               <button
-                className="btn btn-light dropdown-toggle d-flex align-items-center gap-2"
+                className="btn btn-outline-primary dropdown-toggle d-flex align-items-center gap-2"
                 type="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
@@ -133,10 +133,10 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch }) => {
             </div>
           ) : (
             <div className="d-flex gap-2">
-              <Link to="/login" className="btn btn-outline-light">
+              <Link to="/login" className="btn btn-outline-primary">
                 Sign In
               </Link>
-              <Link to="/signup" className="btn btn-light">
+              <Link to="/signup" className="btn btn-primary">
                 Sign Up
               </Link>
             </div>
