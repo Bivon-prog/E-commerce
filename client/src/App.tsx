@@ -7,6 +7,7 @@ import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
+import Orders from './pages/Orders';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import ProductForm from './pages/Admin/ProductForm';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -46,6 +47,14 @@ function App() {
                   } 
                 />
                 <Route 
+                  path="/orders" 
+                  element={
+                    <ProtectedRoute>
+                      <Orders />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
                   path="/admin/dashboard" 
                   element={
                     <AdminRoute>
@@ -72,7 +81,7 @@ function App() {
               </Routes>
             </div>
             <footer className="bg-dark text-white text-center py-3 mt-5">
-              <p className="mb-0">© 2026 Phone Place Kenya. All rights reserved.</p>
+              <p className="mb-0">© 2026 Smart Gadgets. All rights reserved.</p>
             </footer>
           </div>
         </Router>

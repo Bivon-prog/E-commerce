@@ -179,7 +179,12 @@ def product_detail(request, product_id):
         
         if serializer.is_valid():
             try:
-                success = Product.update(product_id, serializer.validated_data)
+                # Disable image validation for updates (allow any URL)
+                if DB_TYPE == "astra":
+                    success = Product.update(product_id, serializer.validated_data, validate_images=False)
+                else:
+                    success = Product.update(product_id, serializer.validated_data)
+                
                 if success:
                     product = Product.get_by_id(product_id)
                     response_serializer = ProductSerializer(product)
@@ -348,3 +353,88 @@ def health_check(request):
             'message': f'Django backend is running but database has issues: {str(e)}',
             'warning': 'Some features may not work properly'
         })
+
+
+@api_view(['POST'])
+def create_order(request):
+    """
+    Create a new order and save it to the database
+    """
+    try:
+        from .order_models import AstraOrder
+        
+        items = request.data.get('items', [])
+        shipping_details = request.data.get('shippingDetails', {})
+        user_email = request.data.get('userEmail', shipping_details.get('email', ''))
+        
+        if not items:
+            return Response(
+                {'error': 'No items in order'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Calculate total
+        total = sum(item.get('price', 0) * item.get('quantity', 0) for item in items)
+        
+        # Create order in database
+        order_data = {
+            'user_email': user_email,
+            'items': items,
+            'shipping_details': shipping_details,
+            'total': total
+        }
+        
+        order = AstraOrder.create(order_data)
+        
+        logger.info(f"Order created: {order['_id']}, Total: KES {total/100:.2f}")
+        
+        # Return success response
+        return Response(
+            {
+                'message': 'Order placed successfully',
+                'order_id': order['_id'],
+                'total': total,
+                'items_count': len(items)
+            },
+            status=status.HTTP_201_CREATED
+        )
+    except Exception as e:
+        logger.error(f"Error creating order: {str(e)}")
+        return Response(
+            {'error': 'Failed to create order', 'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+def get_user_orders(request):
+    """
+    Get all orders for the authenticated user
+    """
+    try:
+        from .order_models import AstraOrder
+        
+        # Get user email from query parameter
+        user_email = request.GET.get('email')
+        
+        if not user_email:
+            return Response(
+                {'error': 'Email parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get orders for this user
+        orders = AstraOrder.get_by_user_email(user_email)
+        
+        # Sort by created_at descending (newest first)
+        orders.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        logger.info(f"Retrieved {len(orders)} orders for {user_email}")
+        
+        return Response(orders)
+    except Exception as e:
+        logger.error(f"Error fetching orders: {str(e)}")
+        return Response(
+            {'error': 'Failed to fetch orders', 'message': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { FaTrash, FaCheckCircle } from 'react-icons/fa';
 import api from '../services/api';
 import { Link } from 'react-router-dom';
 
 const Checkout: React.FC = () => {
   const { cart, removeFromCart, cartTotal, clearCart } = useCart();
-  const [formData, setFormData] = useState({ name: '', address: '', email: '' });
+  const { user } = useAuth();
+  const [formData, setFormData] = useState({ name: '', address: '', email: user?.email || '' });
   const [ordered, setOrdered] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -14,7 +16,11 @@ const Checkout: React.FC = () => {
     try {
       // Note: The Rust backend doesn't have an orders endpoint yet
       // This would need to be implemented in the Rust backend
-      await api.post('/orders', { items: cart, shippingDetails: formData });
+      await api.post('/orders', { 
+        items: cart, 
+        shippingDetails: formData,
+        userEmail: user?.email || formData.email
+      });
       setOrdered(true);
       clearCart();
     } catch (error) {
@@ -24,20 +30,24 @@ const Checkout: React.FC = () => {
 
   if (ordered) {
     return (
-      <div className="text-center mt-5">
-        <FaCheckCircle className="text-success display-1 mb-3" />
-        <h2>Thank You for Your Order!</h2>
-        <p className="lead">We have received your order and are processing it.</p>
-        <Link to="/" className="btn btn-primary mt-3">Continue Shopping</Link>
+      <div className="container mt-5">
+        <div className="text-center">
+          <FaCheckCircle className="text-success display-1 mb-3" />
+          <h2>Thank You for Your Order!</h2>
+          <p className="lead">We have received your order and are processing it.</p>
+          <Link to="/" className="btn btn-primary mt-3">Continue Shopping</Link>
+        </div>
       </div>
     );
   }
 
   if (cart.length === 0) {
     return (
-      <div className="text-center mt-5">
-        <h3>Your cart is empty</h3>
-        <Link to="/" className="btn btn-primary mt-3">Start Shopping</Link>
+      <div className="container mt-5">
+        <div className="text-center">
+          <h3>Your cart is empty</h3>
+          <Link to="/" className="btn btn-primary mt-3">Start Shopping</Link>
+        </div>
       </div>
     );
   }
@@ -46,7 +56,8 @@ const Checkout: React.FC = () => {
   const displayTotal = (cartTotal / 100).toFixed(2);
 
   return (
-    <div className="row">
+    <div className="container mt-4">
+      <div className="row">
       <div className="col-md-8">
         <h4 className="mb-3">Shopping Cart</h4>
         <div className="list-group mb-4">
@@ -124,6 +135,7 @@ const Checkout: React.FC = () => {
             </form>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

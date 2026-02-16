@@ -184,7 +184,7 @@ const Home: React.FC<HomeProps> = ({ searchHandlerRef }) => {
           <div className="site-header rounded mb-4">
             <div className="d-flex justify-content-between align-items-center">
               <div>
-                <h2 className="fw-bold mb-1">Phone Place Kenya</h2>
+                <h2 className="fw-bold mb-1">Smart Gadgets</h2>
                 <p className="mb-0 opacity-75">Latest Smartphones in Kenya</p>
               </div>
               <div className="d-flex gap-2">

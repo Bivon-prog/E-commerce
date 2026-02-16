@@ -90,7 +90,7 @@ const Signup: React.FC = () => {
                   <FaMobileAlt />
                 </div>
                 <h2 className="fw-bold mb-2">Create Account</h2>
-                <p className="text-muted">Join Phone Place Kenya today!</p>
+                <p className="text-muted">Join Smart Gadgets today!</p>
               </div>
 
               {/* Error Alert */}

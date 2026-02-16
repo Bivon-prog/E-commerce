@@ -10,6 +10,7 @@ const ProductForm = () => {
   const [formData, setFormData] = useState({
     name: '',
     brand: '',
+    category: 'Smartphone',
     price: '',
     description: '',
     in_stock: true,
@@ -40,6 +41,7 @@ const ProductForm = () => {
       setFormData({
         name: product.name || '',
         brand: product.brand || '',
+        category: product.category || 'Smartphone',
         price: (product.price / 100).toString(),
         description: product.description || '',
         in_stock: product.in_stock !== false,
@@ -157,6 +159,18 @@ const ProductForm = () => {
                     className="form-control"
                     name="brand"
                     value={formData.brand}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Category *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="category"
+                    value={formData.category}
                     onChange={handleChange}
                     required
                   />

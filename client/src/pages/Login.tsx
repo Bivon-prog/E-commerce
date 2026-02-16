@@ -156,7 +156,7 @@ const Login: React.FC = () => {
           <div className="card mt-3 bg-light border-0">
             <div className="card-body text-center py-2">
               <small className="text-muted d-block mb-1">
-                <strong>Demo User:</strong> demo@example.com / password123
+                <strong>Normal User:</strong> user@gmail.com / password 
               </small>
               <small className="text-muted d-block">
                 <strong>Admin:</strong> admin@phoneplace.com / admin123

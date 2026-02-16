@@ -184,16 +184,17 @@ class AstraProduct:
             return None
     
     @classmethod
-    def update(cls, product_id, data):
+    def update(cls, product_id, data, validate_images=True):
         """
-        Update a product with image validation.
+        Update a product with optional image validation.
         Args:
             product_id: String representation of product ID
             data: Dictionary containing updated product data
+            validate_images: Boolean to enable/disable image validation
         Returns:
             Boolean indicating success
         Raises:
-            ValueError: If image URLs are invalid
+            ValueError: If image URLs are invalid and validation is enabled
         """
         product_data = cls._prepare_product_data(data)
         
@@ -201,8 +202,8 @@ class AstraProduct:
         if '_id' in product_data:
             del product_data['_id']
         
-        # Validate image URLs if provided
-        if 'images' in product_data:
+        # Validate image URLs if provided and validation is enabled
+        if validate_images and 'images' in product_data:
             cls._validate_image_urls(product_data['images'])
         
         collection = AstraDB.get_collection()

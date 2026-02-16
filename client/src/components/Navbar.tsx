@@ -50,7 +50,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch }) => {
     <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
       <div className="container">
         <Link className="navbar-brand d-flex align-items-center gap-2 fw-bold" to="/">
-          <FaMobileAlt /> Phone Place Kenya
+          <FaMobileAlt /> Smart Gadgets
         </Link>
         
         {/* Search Bar */}
