@@ -10,7 +10,8 @@ interface FilterSidebarProps {
 const FilterSidebar: React.FC<FilterSidebarProps> = ({ onFilterChange, activeFilters }) => {
   const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['brand', 'price_tier']));
+  // Initialize with brand and price_tier expanded
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(() => new Set(['brand', 'price_tier']));
 
   useEffect(() => {
     api.get('/filter-options')
@@ -90,18 +91,28 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ onFilterChange, activeFil
 
   return (
     <div className="filter-sidebar">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5 className="mb-0">Filters</h5>
-        {getActiveFilterCount() > 0 && (
-          <button 
-            className="btn btn-sm btn-outline-primary"
-            onClick={clearAllFilters}
-          >
-            Clear All ({getActiveFilterCount()})
-          </button>
-        )}
+      <div className="filter-header">
+        <div className="d-flex justify-content-between align-items-center">
+          <div>
+            <h5 className="mb-0 fw-bold">
+              <i className="bi bi-funnel me-2"></i>Filters
+            </h5>
+            {getActiveFilterCount() > 0 && (
+              <small className="text-muted">{getActiveFilterCount()} active</small>
+            )}
+          </div>
+          {getActiveFilterCount() > 0 && (
+            <button 
+              className="btn btn-sm btn-link text-danger text-decoration-none"
+              onClick={clearAllFilters}
+            >
+              <i className="bi bi-x-circle me-1"></i>Clear
+            </button>
+          )}
+        </div>
       </div>
       
+      <div className="filter-sections-container">
       {/* Brands */}
       <div className="filter-section">
         <div 
@@ -385,6 +396,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ onFilterChange, activeFil
             </small>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
