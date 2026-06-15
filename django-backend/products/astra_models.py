@@ -56,6 +56,7 @@ class AstraDB:
 
 class AstraProduct:
     """Product model for Astra Data API operations"""
+    _cache = None
     
     @staticmethod
     def _validate_image_urls(images):
@@ -135,6 +136,9 @@ class AstraProduct:
         
         result = collection.insert_one(product_data)
         
+        # Invalidate cache
+        cls._cache = None
+        
         logger.info(f"Created product: {product_data.get('name')} (ID: {product_id})")
         return product_data
     
@@ -147,23 +151,28 @@ class AstraProduct:
         Returns:
             List of product documents
         """
-        collection = AstraDB.get_collection()
+        if cls._cache is None:
+            logger.info("Cache miss. Fetching all products from Astra DB...")
+            collection = AstraDB.get_collection()
+            cursor = collection.find({})
+            cls._cache = [cls._format_product(doc) for doc in cursor]
+            logger.info(f"Cached {len(cls._cache)} products from Astra DB")
         
-        # Build query
-        query = {}
+        products = cls._cache.copy()
+        
+        # Apply filters in memory
         if filters:
             if 'brand' in filters:
-                query['brand'] = filters['brand']
+                products = [p for p in products if p.get('brand') == filters['brand']]
             if 'category' in filters:
-                query['category'] = filters['category']
+                products = [p for p in products if p.get('category') == filters['category']]
             if 'in_stock' in filters:
-                query['in_stock'] = filters['in_stock']
+                in_stock_val = filters['in_stock']
+                if isinstance(in_stock_val, str):
+                    in_stock_val = in_stock_val.lower() == 'true'
+                products = [p for p in products if p.get('in_stock') == in_stock_val]
         
-        # Find documents
-        cursor = collection.find(query)
-        products = [cls._format_product(doc) for doc in cursor]
-        
-        logger.info(f"Retrieved {len(products)} products")
+        logger.info(f"Retrieved {len(products)} products (from cache)")
         return products
     
     @classmethod
@@ -175,6 +184,11 @@ class AstraProduct:
         Returns:
             Product document or None
         """
+        if cls._cache is not None:
+            for product in cls._cache:
+                if product.get('_id') == product_id:
+                    return product
+        
         collection = AstraDB.get_collection()
         try:
             doc = collection.find_one({"_id": product_id})
@@ -215,7 +229,8 @@ class AstraProduct:
             # For Astra Data API, check if the operation was successful
             success = result is not None
             if success:
-                logger.info(f"Updated product: {product_id}")
+                cls._cache = None  # Invalidate cache
+                logger.info(f"Updated product: {product_id} and invalidated cache")
             return success
         except Exception as e:
             logger.error(f"Error updating product {product_id}: {str(e)}")
@@ -235,7 +250,8 @@ class AstraProduct:
             result = collection.delete_one({"_id": product_id})
             success = result.deleted_count > 0
             if success:
-                logger.info(f"Deleted product: {product_id}")
+                cls._cache = None  # Invalidate cache
+                logger.info(f"Deleted product: {product_id} and invalidated cache")
             return success
         except Exception as e:
             logger.error(f"Error deleting product {product_id}: {str(e)}")

@@ -14,8 +14,7 @@ const Checkout: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Note: The Rust backend doesn't have an orders endpoint yet
-      // This would need to be implemented in the Rust backend
+      // Send order to Django backend
       await api.post('/orders', { 
         items: cart, 
         shippingDetails: formData,
@@ -66,7 +65,7 @@ const Checkout: React.FC = () => {
             const itemTotal = ((item.price * item.quantity) / 100).toFixed(2);
             
             return (
-              <div key={item.id} className="list-group-item d-flex justify-content-between align-items-center">
+              <div key={item._id} className="list-group-item d-flex justify-content-between align-items-center">
                 <div className="d-flex align-items-center gap-3">
                   <img src={item.images[0]} alt={item.name} width="60" height="60" className="object-fit-contain rounded border" />
                   <div>
@@ -76,7 +75,7 @@ const Checkout: React.FC = () => {
                 </div>
                 <div className="d-flex align-items-center gap-3">
                   <span className="fw-bold">KES {itemTotal}</span>
-                  <button className="btn btn-outline-danger btn-sm" onClick={() => removeFromCart(item.id)}>
+                  <button className="btn btn-outline-danger btn-sm" onClick={() => removeFromCart(item._id)}>
                     <FaTrash />
                   </button>
                 </div>

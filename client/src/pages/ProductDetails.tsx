@@ -43,7 +43,7 @@ const ProductDetails: React.FC = () => {
   };
 
   // Get category badge
-  const getCategoryBadge = (category: string, value: string) => {
+  const getCategoryBadge = (_category: string, value: string) => {
     const badges: { [key: string]: string } = {
       'Entry-Level': 'bg-success',
       'Budget': 'bg-info',
