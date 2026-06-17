@@ -30,7 +30,10 @@ class AstraDB:
         """Get database instance"""
         if cls._database is None:
             client = cls.get_client()
-            cls._database = client.get_database_by_api_endpoint(settings.ASTRA_API_ENDPOINT)
+            cls._database = client.get_database_by_api_endpoint(
+                settings.ASTRA_API_ENDPOINT,
+                keyspace=settings.ASTRA_DB_KEYSPACE
+            )
             logger.info(f"Using Astra database: {settings.ASTRA_DB_ID}")
         return cls._database
     
